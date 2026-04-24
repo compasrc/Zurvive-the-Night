@@ -92,8 +92,7 @@ Expected: Invincibility toggles and debug overlay appears
 - Python
 - Pygame
 
-## Controls:
-
+## Controls
 - Arrow keys / `WASD`: move (top-down)
 - `Space`: shoot projectile
 - `R`: reload
@@ -101,6 +100,7 @@ Expected: Invincibility toggles and debug overlay appears
 - `P` / `Esc`: pause / resume
 - Left Mouse Click: interact with UI (pause menu, title screen)
 - `Enter`: start game (from title screen)
+- `C`: cycle control scheme (WASD / arrows)
 - `Ctrl` + `R`: reset game
 - `I`: invincibilty for debug
 - `F1`: toggle debug overlay
