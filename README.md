@@ -8,7 +8,20 @@ Throughout the game, collectible power-ups such as health, ammo, shields, damage
 
 The project is built using a modular Python architecture, with separate systems for enemy management, player control, rendering, and game logic, making the codebase scalable and maintainable.
 
-## Features
+## Mission Statement:
+
+Our goal with Call of Zombie Duty is to create a fast-paced, replayable zombie survival game that challenges players through dynamic gameplay and procedural design. We aim to build a clean, modular codebase that is easy to extend while delivering an engaging and polished player experience.
+
+## Development Overview:
+
+During this project, we expanded and improved the base game by adding a full enemy wave-based system, final boss, and multiple weapon types with distinct mechanics. We implemented procedurally generated obstacles to increase replayability and added power-ups to create more dynamic gameplay.
+
+We also improved the user interface with a title screen, pause menu, and improved HUD. Additionally, we refined player movement, fixed gameplay bugs (such as player drift and early wave damage issues), and enhanced visuals with sprite animations and sound effects.
+
+Some features we considered but did not fully implement include additional enemy types, more advanced boss mechanics, infinite waves, a slower difficulty ramp, and settings options (mute, volume, keybinds, etc.).
+
+## Features/Changes Made:
+
 - Wave-based enemy system with increasing difficulty
 - Final boss battle on wave 5
 - Procedurally generated obstacles for unique gameplay
@@ -24,20 +37,63 @@ The project is built using a modular Python architecture, with separate systems 
     - Fire rate boost
     - Sprite-based animations using sprite sheets
 
-## Setup
+## Testing Procedure:
+
+We used manual testing to verify the game. Each test includes actions and expected results.
+
+### Movement
+Action: Move using WASD or arrow keys  
+Expected: Player moves in the correct direction smoothly
+
+### Shooting
+Action: Press Space  
+Expected: Player shoots and ammo decreases
+
+### Reload
+Action: Press R  
+Expected: Ammo refills and player cannot shoot while reloading
+
+### Weapon Switching
+Action: Press 1, 2, 3  
+Expected: Weapon changes and stats update
+
+### Enemies & Waves
+Action: Play through waves  
+Expected: Enemies increase and get harder each wave and boss appears on wave 5
+
+### Collision
+Action: Touch enemies or obstacles  
+Expected: Player takes damage from enemies and cannot pass through obstacles
+
+### Power-Ups
+Action: Collect power-ups  
+Expected: Effects apply correctly (health, ammo, shield, damage, fire rate)
+
+### Game Controls
+Action: Press P/Esc, Enter, Ctrl+R  
+Expected: Pause/resume works, game starts, and resets properly
+
+### Debug
+Action: Press I, F1  
+Expected: Invincibility toggles and debug overlay appears
+
+## Setup:
+
 1. Make sure Python is installed on your device
 2. Install dependencies
     - pip install pygame
-2. Clone the repo
+3. Clone the repo
     - git clone https://github.com/quinnh4/COMP312OSProject
     - cd COMP312OSProject
-3. python main.py
+4. python main.py
 
-## Technologies Used
+## Technologies Used:
+
 - Python
 - Pygame
 
-## Controls
+## Controls:
+
 - Arrow keys / `WASD`: move (top-down)
 - `Space`: shoot projectile
 - `R`: reload
@@ -49,19 +105,40 @@ The project is built using a modular Python architecture, with separate systems 
 - `I`: invincibilty for debug
 - `F1`: toggle debug overlay
 
-## Authors
+## Authors/Contributions:
+
 - Quinn Hasselgren
+    - Wave/Enemy System
+    - Power-ups
+    - Obstacles
+    - Title Screen/Pause Menu
+    - Playfield design with tombstones as obstacles
+    - Got rid of previous bounds and feel presets
+    - Main Menu/Level Music, Sound effects
+    - Weapon section of HUD
+    - Rebalanced weapons
+    - Rethemed menu messages
 - Ryan Compas
+    - Fixed player drift
+    - Graphics/animations (enemy/player sprites, movement, idle, death, weapon)
 - Khumoyun Abdulpattoev
+    - Damage
+    - Health bar
+    - Weapon mechanics (more ammo with each wave and more power for the Boss fight)
+    - Fixed damage issue in first wave
+    - HUD Design
+    - Death/victory animations
 
 ## Tombstone PNG Credit:
+
 - tombstone1.png: https://www.shutterstock.com/image-vector/gravestone-pixel-art-set-objects-tombstone-2683992699
 - tombstone2.png: https://www.shutterstock.com/image-vector/gravestone-pixel-art-set-objects-tombstone-2683992699
 - tombstone3.png: https://www.shutterstock.com/image-vector/gravestone-pixel-art-set-objects-tombstone-2683992699
 - tombstone4.png: https://www.shutterstock.com/image-vector/gravestone-pixel-art-set-objects-tombstone-2683992699
 - tombstone5.png: https://www.shutterstock.com/image-vector/gravestone-pixel-art-set-objects-tombstone-2683992699
 
-## Sound Effect Credits (Royalty-Free)
+## Sound Effect Credits (Royalty-Free):
+
 - main_music.mp3: https://pixabay.com/music/mystery-electro-zombies-371569/
 - level_music.mp3: https://pixabay.com/music/fantasy-dreamy-childrens-plagued-bastion-survival-undead-haven-477915/
 - boss_zombie.mp3: https://pixabay.com/sound-effects/horror-zombie-3-106344/
