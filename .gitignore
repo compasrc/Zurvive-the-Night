@@ -11,3 +11,6 @@ venv/
 
 # Misc
 *.pdf
+
+# Editor settings
+.vscode/
