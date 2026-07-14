@@ -11,6 +11,7 @@ venv/
 
 # Misc
 *.pdf
+*.zip
 
 # Editor settings
 .vscode/
