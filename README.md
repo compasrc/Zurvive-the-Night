@@ -77,15 +77,30 @@ Expected: Pause/resume works, game starts, and resets properly
 Action: Press I, F1  
 Expected: Invincibility toggles and debug overlay appears
 
-## Setup:
+## How to Run
 
-1. Make sure Python is installed on your device
-2. Install dependencies
-    - pip install pygame
-3. Clone the repo
-    - git clone https://github.com/quinnh4/COMP312OSProject
-    - cd COMP312OSProject
-4. python main.py
+You can run the game in two ways:
+
+### Option A: Run a Prebuilt Windows Executable (No Install Required)
+
+1. Download and extract the shared build folder.
+2. Open dist/CallOfZombieDuty.
+3. Double-click CallOfZombieDuty.exe.
+
+You do not need Python, pygame, or an IDE for this option.
+
+### Option B: Run from Source Code
+
+1. Install Python 3.10 or newer.
+2. Open a terminal in the project folder.
+3. Install dependency:
+    - python -m pip install pygame
+4. Start the game:
+    - python main.py
+
+If your system uses py instead of python, run these instead:
+- py -m pip install pygame
+- py main.py
 
 ## Technologies Used:
 
