@@ -253,10 +253,13 @@ def _draw_title_text(surf: pygame.Surface, font: pygame.font.Font, flicker: floa
 
     # blood drips hanging off the red title line
     x2 = w // 2 - s2.get_width() // 2
-    for i, (dx, dlen) in enumerate([(30, 14), (90, 8), (150, 18), (210, 10), (260, 22), (330, 13)]):
+    center_x = x2 + s2.get_width() // 2
+    drip_specs = [(-144, 10), (-96, 15), (-48, 20), (0, 25), (48, 20), (96, 15), (144, 10)]
+    for dx, dlen in drip_specs:
         drip_y = 110 + s2.get_height() - 4
-        pygame.draw.rect(surf, BLOOD_RED, (x2 + dx, drip_y, PIXEL, dlen))
-        pygame.draw.rect(surf, BLOOD_BRIGHT, (x2 + dx, drip_y + dlen, PIXEL, PIXEL))
+        drip_x = center_x + dx
+        pygame.draw.rect(surf, BLOOD_RED, (drip_x, drip_y, PIXEL, dlen))
+        pygame.draw.rect(surf, BLOOD_BRIGHT, (drip_x, drip_y + dlen, PIXEL, PIXEL))
 
 
 
@@ -429,8 +432,8 @@ class TitleScreen:
 
 
         # tagline
-        tag = self.small_font.render("~ A TOP-DOWN ZOMBIE SHOOTER ~", True, TEXT_DIM)
-        surf.blit(tag, (self.w // 2 - tag.get_width() // 2, 176))
+        tag = self.small_font.render("- A TOP-DOWN ZOMBIE SHOOTER -", True, TEXT_DIM)
+        surf.blit(tag, (self.w // 2 - tag.get_width() // 2, 215))
 
 
         # buttons
