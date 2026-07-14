@@ -11,6 +11,7 @@ from input_control_feel.obstacle import (
 )
 from input_control_feel.title_screen import TitleScreen, PauseMenu
 from input_control_feel.sprite_manager import PlayerSpriteAnimator, PlayerDirection
+from input_control_feel.resource_path import resolve_asset_path
 
 import pygame
 
@@ -157,7 +158,7 @@ class Game:
 
         # player sprite animator
         self.player_sprite_animator = PlayerSpriteAnimator(
-            "input_control_feel/sprites/Player",
+            resolve_asset_path("input_control_feel/sprites/Player"),
             player_size=self.PLAYER_SIZE
         )
 
@@ -481,12 +482,12 @@ class Game:
             return
 
         sfx_files = {
-            "gun":          "input_control_feel/sounds/gun.mp3",
-            "zombie_death": "input_control_feel/sounds/zombie_death.mp3",
-            "boss_death":   "input_control_feel/sounds/boss_zombie.mp3",
-            "death":        "input_control_feel/sounds/death.mp3",
-            "hurt":         "input_control_feel/sounds/hurt.mp3",
-            "powerup":      "input_control_feel/sounds/powerup.mp3",
+            "gun":          resolve_asset_path("input_control_feel/sounds/gun.mp3"),
+            "zombie_death": resolve_asset_path("input_control_feel/sounds/zombie_death.mp3"),
+            "boss_death":   resolve_asset_path("input_control_feel/sounds/boss_zombie.mp3"),
+            "death":        resolve_asset_path("input_control_feel/sounds/death.mp3"),
+            "hurt":         resolve_asset_path("input_control_feel/sounds/hurt.mp3"),
+            "powerup":      resolve_asset_path("input_control_feel/sounds/powerup.mp3"),
         }
         self.sfx: dict[str, pygame.mixer.Sound] = {}
         for key, path in sfx_files.items():
@@ -514,8 +515,8 @@ class Game:
             self.sfx["powerup"].set_volume(0.7)
 
         # music tracks — menu plays on title/pause, level plays during gameplay
-        menu_path = "input_control_feel/music/main_menu.mp3"
-        level_path = "input_control_feel/music/level_music.mp3"
+        menu_path = resolve_asset_path("input_control_feel/music/main_menu.mp3")
+        level_path = resolve_asset_path("input_control_feel/music/level_music.mp3")
         self.music_paths = {
             "menu":  menu_path if os.path.exists(menu_path) else None,
             "level": level_path if os.path.exists(level_path) else None,

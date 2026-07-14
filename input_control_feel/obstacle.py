@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 import os
 import random
 import pygame
+from input_control_feel.resource_path import resolve_asset_path
 
 
 # fallback colors if sprite files are missing
@@ -14,11 +15,11 @@ GRAVE_SHADOW = (40, 42, 48)
 # tombstone sprites are loaded on first use and cached here
 _TOMBSTONE_SPRITES: list[pygame.Surface] | None = None
 _SPRITE_PATHS = [
-    "input_control_feel/sprites/tombstones/tombstone1.png",
-    "input_control_feel/sprites/tombstones/tombstone2.png",
-    "input_control_feel/sprites/tombstones/tombstone3.png",
-    "input_control_feel/sprites/tombstones/tombstone4.png",
-    "input_control_feel/sprites/tombstones/tombstone5.png",
+    resolve_asset_path("input_control_feel/sprites/tombstones/tombstone1.png"),
+    resolve_asset_path("input_control_feel/sprites/tombstones/tombstone2.png"),
+    resolve_asset_path("input_control_feel/sprites/tombstones/tombstone3.png"),
+    resolve_asset_path("input_control_feel/sprites/tombstones/tombstone4.png"),
+    resolve_asset_path("input_control_feel/sprites/tombstones/tombstone5.png"),
 ]
 
 # tight pixel bounds for each sprite as (left_frac, top_frac, right_frac, bot_frac)

@@ -7,6 +7,7 @@ import os
 from input_control_feel.enemy import Enemy
 from input_control_feel.obstacle import Obstacle
 from input_control_feel.sprite_manager import SpriteAnimator
+from input_control_feel.resource_path import resolve_asset_path
 
 
 @dataclass(frozen=True)
@@ -75,8 +76,8 @@ class WaveManager:
         if WaveManager._sprite_animator_right is not None or WaveManager._sprite_animator_left is not None:
             return  # Already loaded
         
-        right_sprite_path = "input_control_feel/sprites/Zombie-Right.png"
-        left_sprite_path = "input_control_feel/sprites/Zombie-Left.png"
+        right_sprite_path = resolve_asset_path("input_control_feel/sprites/Zombie-Right.png")
+        left_sprite_path = resolve_asset_path("input_control_feel/sprites/Zombie-Left.png")
 
         if not os.path.exists(right_sprite_path) and not os.path.exists(left_sprite_path):
             # Sprite files not found - enemies will render as colored boxes

@@ -1,11 +1,20 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+from pathlib import Path
+
+
+PROJECT_ROOT = Path(SPECPATH).resolve()
+
 
 a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
-    datas=[('input_control_feel/sprites', 'input_control_feel/sprites'), ('input_control_feel/sounds', 'input_control_feel/sounds'), ('input_control_feel/music', 'input_control_feel/music')],
+    datas=[
+        (str(PROJECT_ROOT / 'input_control_feel' / 'sprites'), 'input_control_feel/sprites'),
+        (str(PROJECT_ROOT / 'input_control_feel' / 'sounds'), 'input_control_feel/sounds'),
+        (str(PROJECT_ROOT / 'input_control_feel' / 'music'), 'input_control_feel/music'),
+    ],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
