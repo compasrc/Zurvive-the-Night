@@ -14,3 +14,7 @@ venv/
 
 # Editor settings
 .vscode/
+
+# PyInstaller build artifacts
+build/
+dist/
