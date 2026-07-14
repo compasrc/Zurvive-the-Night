@@ -83,11 +83,15 @@ You can run the game in two ways:
 
 ### Option A: Run a Prebuilt Windows Executable (No Install Required)
 
-1. Download and extract the shared build folder.
+This option only works if a prebuilt release zip is provided separately (for example, in GitHub Releases or a shared download link).
+
+1. Download and extract the shared build folder zip.
 2. Open dist/CallOfZombieDuty.
 3. Double-click CallOfZombieDuty.exe.
 
 You do not need Python, pygame, or an IDE for this option.
+
+Note: The executable is not stored in this source repository by default.
 
 ### Option B: Run from Source Code
 
