@@ -140,6 +140,9 @@ If your system uses py instead of python, run these instead:
 - Ryan Compas
     - Fixed player drift
     - Graphics/animations (enemy/player sprites, movement, idle, death, weapon)
+    - Fixed missing sprites/sounds/music in the packaged Windows build
+    - Added a shared asset-path resolver for source and PyInstaller runs
+    - Updated build spec and verified assets are bundled in release output
 - Khumoyun Abdulpattoev
     - Damage
     - Health bar
@@ -166,3 +169,7 @@ If your system uses py instead of python, run these instead:
 - powerup.mp3: https://pixabay.com/sound-effects/film-special-effects-video-game-power-up-sound-effect-384657/
 - gun.mp3: https://pixabay.com/sound-effects/film-special-effects-single-pistol-gunshot-42-40781/
 - hurt.mp3: https://pixabay.com/sound-effects/film-special-effects-retro-hurt-2-236675/
+
+## Sprite Sheets and Animations
+- Zombie assets courtesy of Kadodey: https://kadodey.itch.io/zombie-sprite
+- Player assets courtesy of TheLazyStone: https://thelazystone.itch.io/post-apocalypse-pixel-art-asset-pack
