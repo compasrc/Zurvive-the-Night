@@ -157,4 +157,4 @@ class Enemy:
         pygame.draw.rect(screen, (60, 0, 0), (r.left, bar_y, self.size, bar_h))
         fill_w = int(self.size * (self.hp / self.max_hp))
         pygame.draw.rect(screen, (220, 50, 50), (r.left, bar_y, fill_w, bar_h))
-
+
