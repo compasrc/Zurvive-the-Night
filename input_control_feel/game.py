@@ -64,7 +64,7 @@ class Game:
     DAMAGE_COOLDOWN = 0.5
     DEATH_ANIM_DURATION = 0.6
 
-    PLAYER_SIZE = 32
+    PLAYER_SIZE = 50
 
     @staticmethod
     def _approach_zero(value: float, decel: float, dt: float) -> float:
