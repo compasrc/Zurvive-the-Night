@@ -179,10 +179,10 @@ class PlayerSpriteAnimator:
         
         # Run - directional sheets
         run_configs = {
-            "down": ("Character_down_run-Sheet6.png", 13, 17),    # 78 / 6
-            "up": ("Character_up_run-Sheet6.png", 13, 17),
-            "left": ("Character_side-left_run-Sheet6.png", 14, 17), # 84 / 6
-            "right": ("Character_side-right_run-Sheet6.png", 14, 17),
+            "down": ("Character_down_run_handless.png", 13, 17),    # 78 / 6
+            "up": ("Character_up_run_handless.png", 13, 17),
+            "left": ("Character_side-left_run_handless.png", 14, 17), # 84 / 6
+            "right": ("Character_side-right_run_handless.png", 14, 17),
         }
         
         for direction, (filename, frame_w, frame_h) in run_configs.items():
