@@ -14,7 +14,7 @@ from input_control_feel.resource_path import resolve_asset_path
 class WaveConfig:
     wave_number: int
     enemy_count: int
-    enemy_hp: int
+    enemy_hp: float
     enemy_speed: float
     enemy_size: int
     enemy_color: tuple
@@ -23,16 +23,16 @@ class WaveConfig:
 
 
 WAVE_CONFIGS: list[WaveConfig] = [
-    WaveConfig(1,  6, 2, 30.0, 50, (80, 140, 80),  1.2),
-    WaveConfig(2, 10, 3, 40.0, 50, (60, 160, 60),  0.9),
-    WaveConfig(3, 14, 4, 50.0, 50, (180, 120, 30), 0.7),
-    WaveConfig(4, 18, 6, 60.0, 50, (160, 60, 60),  0.55),
-    WaveConfig(5,  1, 120, 35.0, 100, (100, 20, 140), 0.0, is_boss_wave=True),
+    WaveConfig(1,  6, 1.0, 30.0, 50, (80, 140, 80),  1.2),
+    WaveConfig(2, 10, 1.5, 35.0, 50, (60, 160, 60),  0.9),
+    WaveConfig(3, 14, 2.0, 40.0, 50, (180, 120, 30), 0.7),
+    WaveConfig(4, 18, 2.5, 45.0, 50, (160, 60, 60),  0.55),
+    WaveConfig(5,  1, 100, 35.0, 100, (100, 20, 140), 0.0, is_boss_wave=True),
 ]
 
 
 BOSS_MINION_COUNT        = 6
-BOSS_MINION_HP           = 3
+BOSS_MINION_HP           = 2
 BOSS_MINION_SPEED        = 85.0
 BOSS_MINION_SIZE         = 32
 BOSS_MINION_COLOR        = (130, 40, 170)
