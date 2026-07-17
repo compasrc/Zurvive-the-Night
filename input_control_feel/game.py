@@ -103,7 +103,6 @@ class Game:
 
         if hasattr(self, "wave_manager"):
             self.wave_manager.playfield = self.playfield
-            self._load_obstacles_for_current_wave()
             if hasattr(self, "player_rect"):
                 self._apply_bounds_player()
                 self._ensure_player_not_in_obstacle()
