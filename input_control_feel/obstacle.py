@@ -20,8 +20,8 @@ _SPRITE_SCALE_FACTORS: list[float] = []
 # vehicle scaling order requested: car < van < bus < truck
 _VEHICLE_TYPE_SCALES: dict[str, float] = {
     "car": 1.25,
-    "van": 1.7,
-    "bus": 2.0,
+    "van": 1.5,
+    "bus": 1.5,
     "truck": 2.5,
 }
 

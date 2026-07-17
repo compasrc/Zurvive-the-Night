@@ -114,17 +114,17 @@ def _draw_ground(surf: pygame.Surface, ground_y: int) -> None:
     # main dirt
     pygame.draw.rect(surf, GROUND_COLOR, (0, ground_y, w, h - ground_y))
     # jagged top edge so it doesn't look like a flat table
-    random.seed(7)
+    rng_edge = random.Random(7)
     x = 0
     while x < w:
-        bump_h = random.choice([0, PIXEL, PIXEL, PIXEL * 2])
+        bump_h = rng_edge.choice([0, PIXEL, PIXEL, PIXEL * 2])
         pygame.draw.rect(surf, GROUND_DARK, (x, ground_y - bump_h, PIXEL * 3, PIXEL))
         x += PIXEL * 3
     # scattered pebbles for ground detail
-    random.seed(42)
+    rng_pebbles = random.Random(42)
     for _ in range(18):
-        px = random.randint(0, w)
-        py = ground_y + random.randint(4, 30)
+        px = rng_pebbles.randint(0, w)
+        py = ground_y + rng_pebbles.randint(4, 30)
         pygame.draw.rect(surf, GROUND_DARK, (px, py, PIXEL * 2, PIXEL))
 
 
@@ -322,23 +322,23 @@ class TitleScreen:
 
 
         # pre-generate star positions so they don't jitter between frames
-        random.seed(1234)
+        rng_stars = random.Random(1234)
         self.stars = [
-            (random.randint(0, screen_w), random.randint(0, int(screen_h * 0.55)),
-             random.random() * math.pi * 2)
+            (rng_stars.randint(0, screen_w), rng_stars.randint(0, int(screen_h * 0.55)),
+             rng_stars.random() * math.pi * 2)
             for _ in range(60)
         ]
 
 
         # gravestone positions along the ground
         self.graves: list[tuple[int, int, bool]] = []
-        random.seed(99)
+        rng_graves = random.Random(99)
         gy = int(screen_h * 0.72)
         for gx in range(40, screen_w, 90):
-            if random.random() < 0.7:
-                offset_x = random.randint(-12, 12)
-                offset_y = random.randint(-4, 8)
-                big = random.random() < 0.3
+            if rng_graves.random() < 0.7:
+                offset_x = rng_graves.randint(-12, 12)
+                offset_y = rng_graves.randint(-4, 8)
+                big = rng_graves.random() < 0.3
                 self.graves.append((gx + offset_x, gy + offset_y, big))
 
 
@@ -420,11 +420,11 @@ class TitleScreen:
 
 
         # blood splats scattered on the ground
-        random.seed(17)
+        rng_blood = random.Random(17)
         for _ in range(6):
-            bx = random.randint(40, self.w - 40)
-            by = random.randint(ground_y + 10, self.h - 20)
-            _draw_blood_splat(surf, bx, by, size=random.choice([2, 3]))
+            bx = rng_blood.randint(40, self.w - 40)
+            by = rng_blood.randint(ground_y + 10, self.h - 20)
+            _draw_blood_splat(surf, bx, by, size=rng_blood.choice([2, 3]))
 
 
         # title text on top of everything
