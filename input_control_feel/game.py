@@ -61,8 +61,8 @@ class FeelPreset:
 class Game:
     fps = 60
 
-    SCREEN_W, SCREEN_H = 960, 540
-    MIN_SCREEN_W, MIN_SCREEN_H = 720, 420
+    SCREEN_W, SCREEN_H = 1366, 768
+    MIN_SCREEN_W, MIN_SCREEN_H = 960, 540
     HUD_H = 54
     PLAYFIELD_PADDING = 10
 
