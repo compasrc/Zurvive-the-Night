@@ -12,15 +12,53 @@ GRAVE_DARK   = (70, 74, 82)
 GRAVE_SHADOW = (40, 42, 48)
 
 
-# tombstone sprites are loaded on first use and cached here
+# obstacle sprites are loaded on first use and cached here
 _TOMBSTONE_SPRITES: list[pygame.Surface] | None = None
-_SPRITE_PATHS = [
-    resolve_asset_path("input_control_feel/sprites/tombstones/tombstone1.png"),
-    resolve_asset_path("input_control_feel/sprites/tombstones/tombstone2.png"),
-    resolve_asset_path("input_control_feel/sprites/tombstones/tombstone3.png"),
-    resolve_asset_path("input_control_feel/sprites/tombstones/tombstone4.png"),
-    resolve_asset_path("input_control_feel/sprites/tombstones/tombstone5.png"),
-]
+_SPRITE_IS_VEHICLE: list[bool] = []
+_SPRITE_SCALE_FACTORS: list[float] = []
+
+# vehicle scaling order requested: car < van < bus < truck
+_VEHICLE_TYPE_SCALES: dict[str, float] = {
+    "car": 1.25,
+    "van": 1.7,
+    "bus": 2.0,
+    "truck": 2.5,
+}
+
+
+def _collect_obstacle_sprite_entries() -> list[tuple[str, bool]]:
+    roots = [
+        (resolve_asset_path("input_control_feel/sprites/tombstones"), False),
+        (resolve_asset_path("input_control_feel/sprites/Vehicles"), True),
+    ]
+    entries: list[tuple[str, bool]] = []
+    for root, is_vehicle in roots:
+        if not os.path.isdir(root):
+            continue
+        for name in sorted(os.listdir(root)):
+            if name.lower().endswith(".png"):
+                entries.append((os.path.join(root, name), is_vehicle))
+    return entries
+
+
+_SPRITE_ENTRIES = _collect_obstacle_sprite_entries()
+
+
+def _vehicle_type_from_path(path: str) -> str:
+    name = os.path.basename(path).lower()
+    if "truck" in name:
+        return "truck"
+    if "bus" in name:
+        return "bus"
+    if "van" in name:
+        return "van"
+    return "car"
+
+
+def _sprite_scale_from_source(path: str, is_vehicle: bool) -> float:
+    if not is_vehicle:
+        return 1.0
+    return _VEHICLE_TYPE_SCALES[_vehicle_type_from_path(path)]
 
 # tight pixel bounds for each sprite as (left_frac, top_frac, right_frac, bot_frac)
 # where each value is a fraction of the full image size (0.0–1.0).
@@ -51,13 +89,15 @@ def _compute_tight_fracs(img: pygame.Surface) -> tuple[float, float, float, floa
 
 def _load_tombstone_sprites() -> list[pygame.Surface]:
     # try to load all tombstone sprites once and cache them.
-    global _TOMBSTONE_SPRITES, _SPRITE_TIGHT_FRACS
+    global _TOMBSTONE_SPRITES, _SPRITE_TIGHT_FRACS, _SPRITE_IS_VEHICLE, _SPRITE_SCALE_FACTORS
     if _TOMBSTONE_SPRITES is not None:
         return _TOMBSTONE_SPRITES
 
     sprites: list[pygame.Surface] = []
     _SPRITE_TIGHT_FRACS = []
-    for path in _SPRITE_PATHS:
+    _SPRITE_IS_VEHICLE = []
+    _SPRITE_SCALE_FACTORS = []
+    for path, is_vehicle in _SPRITE_ENTRIES:
         if os.path.exists(path):
             try:
                 img = pygame.image.load(path).convert_alpha()
@@ -70,6 +110,8 @@ def _load_tombstone_sprites() -> list[pygame.Surface]:
                 fracs = _compute_tight_fracs(img)
                 sprites.append(img)
                 _SPRITE_TIGHT_FRACS.append(fracs)
+                _SPRITE_IS_VEHICLE.append(is_vehicle)
+                _SPRITE_SCALE_FACTORS.append(_sprite_scale_from_source(path, is_vehicle))
                 print(f"[obstacle] Loaded {path}, tight fracs={fracs}")
             except Exception as e:
                 print(f"[obstacle] Failed to load {path}: {e}")
@@ -97,6 +139,12 @@ def _get_scaled_sprite(sprite_idx: int, w: int, h: int) -> pygame.Surface | None
     return cached
 
 
+def _scale_for_sprite_idx(sprite_idx: int) -> float:
+    if _SPRITE_SCALE_FACTORS and 0 <= sprite_idx < len(_SPRITE_SCALE_FACTORS):
+        return _SPRITE_SCALE_FACTORS[sprite_idx]
+    return 1.0
+
+
 @dataclass
 class Obstacle:
     rect: pygame.Rect
@@ -115,17 +163,26 @@ class Obstacle:
             lf, tf, rf, bf = _SPRITE_TIGHT_FRACS[idx]
         else:
             lf, tf, rf, bf = 0.0, 0.0, 1.0, 1.0  # fallback: full rect
-        w, h = self.rect.width, self.rect.height
-        left   = self.rect.left + int(lf * w)
-        top    = self.rect.top  + int(tf * h)
-        right  = self.rect.left + int(rf * w)
-        bottom = self.rect.top  + int(bf * h)
+        scale = _scale_for_sprite_idx(idx)
+        w = max(1, int(round(self.rect.width * scale)))
+        h = max(1, int(round(self.rect.height * scale)))
+        draw_left = self.rect.centerx - (w // 2)
+        draw_top = self.rect.centery - (h // 2)
+        left   = draw_left + int(lf * w)
+        top    = draw_top + int(tf * h)
+        right  = draw_left + int(rf * w)
+        bottom = draw_top + int(bf * h)
         return pygame.Rect(left, top, right - left, bottom - top)
 
     def draw(self, screen: pygame.Surface) -> None:
-        sprite = _get_scaled_sprite(self.sprite_idx, self.rect.width, self.rect.height)
+        idx = self.sprite_idx
+        scale = _scale_for_sprite_idx(idx)
+        draw_w = max(1, int(round(self.rect.width * scale)))
+        draw_h = max(1, int(round(self.rect.height * scale)))
+        sprite = _get_scaled_sprite(idx, draw_w, draw_h)
         if sprite:
-            screen.blit(sprite, self.rect.topleft)
+            dest = sprite.get_rect(center=self.rect.center)
+            screen.blit(sprite, dest.topleft)
         else:
             # fallback if sprites failed to load
             pygame.draw.rect(screen, GRAVE_COLOR, self.rect, border_radius=4)
