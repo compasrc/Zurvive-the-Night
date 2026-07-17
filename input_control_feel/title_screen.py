@@ -224,8 +224,8 @@ def _draw_title_text(surf: pygame.Surface, font: pygame.font.Font, flicker: floa
     w, _ = surf.get_size()
 
 
-    line1 = "CALL OF"
-    line2 = "ZOMBIE DUTY"
+    line1 = "ZURVIVE"
+    line2 = "THE NIGHT"
 
 
     # slight jitter for the horror vibe

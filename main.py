@@ -5,7 +5,7 @@ from input_control_feel.game import Game
 
 def main() -> None:
     pygame.init()
-    pygame.display.set_caption("Call of Zombie Duty")
+    pygame.display.set_caption("ZURVIVE THE NIGHT")
 
     game = Game()
     clock = pygame.time.Clock()

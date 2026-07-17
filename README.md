@@ -1,4 +1,4 @@
-# Call of Zombie Duty
+# ZURVIVE THE NIGHT
 
 This project is a 2D top-down zombie shooter focused on wave-based survival and dynamic gameplay. Players fight through five increasingly difficult waves of enemies, ending in a final boss battle.
 
@@ -10,7 +10,7 @@ The project is built using a modular Python architecture, with separate systems 
 
 ## Mission Statement:
 
-Our goal with Call of Zombie Duty is to create a fast-paced, replayable zombie survival game that challenges players through dynamic gameplay and procedural design. We aim to build a clean, modular codebase that is easy to extend while delivering an engaging and polished player experience.
+Our goal with Zurvive the Night is to create a fast-paced, replayable zombie survival game that challenges players through dynamic gameplay and procedural design. We aim to build a clean, modular codebase that is easy to extend while delivering an engaging and polished player experience.
 
 ## Development Overview:
 

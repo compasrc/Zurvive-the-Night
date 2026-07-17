@@ -17,7 +17,7 @@ class PowerUpType(str, Enum):
 
 # visual + gameplay config for each power-up type
 POWERUP_INFO = {
-    PowerUpType.HEALTH:     {"color": (80, 220, 100),  "label": "+HP",   "weight": 25},
+    PowerUpType.HEALTH:     {"color": (80, 220, 100),  "label": "HP",   "weight": 25},
     PowerUpType.SHIELD:     {"color": (80, 160, 255),  "label": "SHLD",  "weight": 15},
     PowerUpType.RAPID_FIRE: {"color": (255, 230, 60),  "label": "RAPID", "weight": 15},
     PowerUpType.AMMO:       {"color": (255, 160, 60),  "label": "AMMO",  "weight": 20},
