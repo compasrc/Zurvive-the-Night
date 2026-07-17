@@ -134,6 +134,7 @@ class Game:
         self._init_audio()
         self._play_music("menu")
         self.bullet_sprite_templates = self._load_bullet_sprites()
+        self.weapon_hud_icons = self._load_weapon_hud_icons()
 
         # states: "title", "play", "dying", "paused", "game_over", "victory"
         self.state = "title"
@@ -521,6 +522,76 @@ class Game:
 
         return loaded
 
+    def _load_weapon_hud_icons(self) -> dict[str, pygame.Surface]:
+        guns_base = resolve_asset_path("input_control_feel/sprites/Player/Guns")
+        icon_sources: dict[str, tuple[str, list[tuple[str, bool]]]] = {
+            "pistol": (
+                "Pistol",
+                [
+                    ("Pistol_image.png", False),
+                    ("Pistol_side_idle-and-run-Sheet6.png", True),
+                ],
+            ),
+            "assault-rifle": (
+                "Gun",
+                [
+                    ("Gun_image.png", False),
+                    ("Gun_side_idle-and-run-Sheet6.png", True),
+                ],
+            ),
+            "shotgun": (
+                "Shotgun",
+                [
+                    ("Shotgun_image.png", False),
+                    ("Shotgun_side_idle-and-run-Sheet6.png", True),
+                ],
+            ),
+        }
+
+        loaded: dict[str, pygame.Surface] = {}
+        for weapon_type, (folder, candidates) in icon_sources.items():
+            loaded_icon = False
+            for filename, is_sheet in candidates:
+                path = os.path.join(guns_base, folder, filename)
+                if not os.path.exists(path):
+                    continue
+
+                try:
+                    image = pygame.image.load(path).convert_alpha()
+                    icon = self._extract_sheet_frame(image, frame_count=6, frame_index=0) if is_sheet else image
+                    loaded[weapon_type] = self._scale_surface_max_dim_nearest(icon, 30)
+                    loaded_icon = True
+                    break
+                except pygame.error as e:
+                    print(f"[hud] failed to load weapon icon source {path}: {e}")
+
+            if not loaded_icon:
+                print(f"[hud] missing weapon icon source for {weapon_type}")
+
+        return loaded
+
+    @staticmethod
+    def _extract_sheet_frame(
+        sheet: pygame.Surface,
+        frame_count: int,
+        frame_index: int,
+    ) -> pygame.Surface:
+        sheet_w, sheet_h = sheet.get_size()
+        if sheet_w <= 0 or sheet_h <= 0 or frame_count <= 0:
+            return sheet.copy()
+
+        frame_w = max(1, sheet_w // frame_count)
+        safe_index = max(0, min(frame_count - 1, frame_index))
+        x = safe_index * frame_w
+
+        if x >= sheet_w:
+            x = 0
+        if x + frame_w > sheet_w:
+            frame_w = sheet_w - x
+
+        rect = pygame.Rect(x, 0, frame_w, sheet_h)
+        return sheet.subsurface(rect).copy()
+
     @staticmethod
     def _scale_surface_max_dim(surface: pygame.Surface, max_dim: int) -> pygame.Surface:
         width, height = surface.get_size()
@@ -533,6 +604,25 @@ class Game:
 
         scale = max_dim / float(longest)
         new_size = (max(1, int(width * scale)), max(1, int(height * scale)))
+        return pygame.transform.smoothscale(surface, new_size)
+
+    @staticmethod
+    def _scale_surface_max_dim_nearest(surface: pygame.Surface, max_dim: int) -> pygame.Surface:
+        width, height = surface.get_size()
+        if width <= 0 or height <= 0:
+            return surface
+
+        longest = max(width, height)
+        if longest == max_dim:
+            return surface
+
+        scale = max_dim / float(longest)
+        new_size = (max(1, int(width * scale)), max(1, int(height * scale)))
+        if longest < max_dim:
+            # Upscale with nearest-neighbor to keep pixel-art edges crisp.
+            return pygame.transform.scale(surface, new_size)
+
+        # Downscale with smooth filtering to avoid harsh aliasing on small HUD icons.
         return pygame.transform.smoothscale(surface, new_size)
 
     @staticmethod
@@ -937,6 +1027,27 @@ class Game:
         label = self.font.render("ZOMBIUS MAXIMUS XI", True, (200, 80, 220))
         self.screen.blit(label, (self.SCREEN_W // 2 - label.get_width() // 2, bar_y - 18))
 
+    def _draw_weapon_icon_box(self) -> None:
+        weapon_type = self.PRESET_WEAPON_TYPES.get(self.preset.name, "pistol")
+
+        box_w = 42
+        box_h = 42
+        box_x = self.SCREEN_W // 2 + 114
+        box_y = 6
+        text_x = box_x + box_w + 8
+        # transparent interior with a white outline
+        pygame.draw.rect(self.screen, (245, 245, 245), (box_x, box_y, box_w, box_h), width=2, border_radius=3)
+
+        icon = self.weapon_hud_icons.get(weapon_type)
+        if icon is not None:
+            icon_dest = icon.get_rect(center=(box_x + box_w // 2, box_y + box_h // 2))
+            self.screen.blit(icon, icon_dest.topleft)
+            return
+
+        fallback = self.small_font.render("?", True, (40, 40, 40))
+        fallback_dest = fallback.get_rect(center=(box_x + box_w // 2, box_y + box_h // 2))
+        self.screen.blit(fallback, fallback_dest.topleft)
+
     def _draw_hud(self) -> None:
         # --- stone slab background ---
         pygame.draw.rect(self.screen, (22, 18, 16), pygame.Rect(0, 0, self.SCREEN_W, self.HUD_H))
@@ -987,8 +1098,16 @@ class Game:
         weapon_text = weapon_names.get(self.preset.name, self.preset.name)
         weapon_color = weapon_colors.get(self.preset.name, (180, 180, 180))
         weapon_surf = self.small_font.render(weapon_text, True, weapon_color)
-        self.screen.blit(weapon_surf,
-                         (self.SCREEN_W // 2 - weapon_surf.get_width() // 2, 36))
+
+        # place weapon name near the icon box in the top bar
+        box_h = 42
+        box_w = 42
+        box_x = self.SCREEN_W // 2 + 114
+        box_y = 6
+        text_x = box_x + box_w + 8
+        text_y = box_y + (box_h - weapon_surf.get_height()) // 2
+        self.screen.blit(weapon_surf, (text_x, text_y))
+        self._draw_weapon_icon_box()
 
         # --- bullet pips (top-right) ---
         pip_y = 8
