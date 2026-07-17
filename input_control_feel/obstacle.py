@@ -15,14 +15,17 @@ GRAVE_SHADOW = (40, 42, 48)
 # obstacle sprites are loaded on first use and cached here
 _TOMBSTONE_SPRITES: list[pygame.Surface] | None = None
 _SPRITE_IS_VEHICLE: list[bool] = []
-_SPRITE_SCALE_FACTORS: list[float] = []
+_SPRITE_SCALE_FACTORS: list[tuple[float, float]] = []
+
+# same vehicle type -> same on-screen size
+_VEHICLE_BASE_SIZE = 52
 
 # vehicle scaling order requested: car < van < bus < truck
-_VEHICLE_TYPE_SCALES: dict[str, float] = {
-    "car": 1.25,
-    "van": 1.5,
-    "bus": 1.5,
-    "truck": 2.5,
+_VEHICLE_TYPE_SCALES: dict[str, tuple[float, float]] = {
+    "car": (1.0, 1.2),
+    "van": (2.0, 1.2),
+    "bus": (2.5, 1.5),
+    "truck": (3.0, 2.2),
 }
 
 
@@ -55,10 +58,24 @@ def _vehicle_type_from_path(path: str) -> str:
     return "car"
 
 
-def _sprite_scale_from_source(path: str, is_vehicle: bool) -> float:
+def _sprite_scale_from_source(path: str, is_vehicle: bool) -> tuple[float, float]:
     if not is_vehicle:
-        return 1.0
+        return (1.0, 1.0)
     return _VEHICLE_TYPE_SCALES[_vehicle_type_from_path(path)]
+
+
+def _draw_size_for_sprite(sprite_idx: int, rect: pygame.Rect) -> tuple[int, int]:
+    scale_x, scale_y = _scale_for_sprite_idx(sprite_idx)
+    is_vehicle = _SPRITE_IS_VEHICLE and 0 <= sprite_idx < len(_SPRITE_IS_VEHICLE) and _SPRITE_IS_VEHICLE[sprite_idx]
+
+    if is_vehicle:
+        w = max(1, int(round(_VEHICLE_BASE_SIZE * scale_x)))
+        h = max(1, int(round(_VEHICLE_BASE_SIZE * scale_y)))
+        return (w, h)
+
+    w = max(1, int(round(rect.width * scale_x)))
+    h = max(1, int(round(rect.height * scale_y)))
+    return (w, h)
 
 # tight pixel bounds for each sprite as (left_frac, top_frac, right_frac, bot_frac)
 # where each value is a fraction of the full image size (0.0–1.0).
@@ -139,10 +156,10 @@ def _get_scaled_sprite(sprite_idx: int, w: int, h: int) -> pygame.Surface | None
     return cached
 
 
-def _scale_for_sprite_idx(sprite_idx: int) -> float:
+def _scale_for_sprite_idx(sprite_idx: int) -> tuple[float, float]:
     if _SPRITE_SCALE_FACTORS and 0 <= sprite_idx < len(_SPRITE_SCALE_FACTORS):
         return _SPRITE_SCALE_FACTORS[sprite_idx]
-    return 1.0
+    return (1.0, 1.0)
 
 
 @dataclass
@@ -158,14 +175,13 @@ class Obstacle:
         pixels of the sprite and scaled to this obstacle's draw rect.
         """
         _load_tombstone_sprites()  # ensure fracs are computed
+        idx = self.sprite_idx % len(_SPRITE_TIGHT_FRACS) if _SPRITE_TIGHT_FRACS else 0
         if _SPRITE_TIGHT_FRACS:
             idx = self.sprite_idx % len(_SPRITE_TIGHT_FRACS)
             lf, tf, rf, bf = _SPRITE_TIGHT_FRACS[idx]
         else:
             lf, tf, rf, bf = 0.0, 0.0, 1.0, 1.0  # fallback: full rect
-        scale = _scale_for_sprite_idx(idx)
-        w = max(1, int(round(self.rect.width * scale)))
-        h = max(1, int(round(self.rect.height * scale)))
+        w, h = _draw_size_for_sprite(idx, self.rect)
         draw_left = self.rect.centerx - (w // 2)
         draw_top = self.rect.centery - (h // 2)
         left   = draw_left + int(lf * w)
@@ -176,9 +192,7 @@ class Obstacle:
 
     def draw(self, screen: pygame.Surface) -> None:
         idx = self.sprite_idx
-        scale = _scale_for_sprite_idx(idx)
-        draw_w = max(1, int(round(self.rect.width * scale)))
-        draw_h = max(1, int(round(self.rect.height * scale)))
+        draw_w, draw_h = _draw_size_for_sprite(idx, self.rect)
         sprite = _get_scaled_sprite(idx, draw_w, draw_h)
         if sprite:
             dest = sprite.get_rect(center=self.rect.center)
