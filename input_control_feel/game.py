@@ -161,6 +161,10 @@ class Game:
             resolve_asset_path("input_control_feel/sprites/Player"),
             player_size=self.PLAYER_SIZE
         )
+        self.player_sprite_animator.set_animation(
+            "idle",
+            self._vector_to_direction(self.last_move_dir),
+        )
 
         self.projectiles: list[Projectile] = []
         self.ammo_current = self.preset.ammo_max
@@ -235,6 +239,11 @@ class Game:
         self.player_vel = pygame.Vector2(0, 0)
         self.player_rect.center = self.player_pos
         self.last_move_dir = pygame.Vector2(1, 0)
+        self.player_sprite_animator.set_animation(
+            "idle",
+            self._vector_to_direction(self.last_move_dir),
+        )
+        self.player_sprite_animator.set_weapon_reloading(False, self._vector_to_direction(self.last_move_dir))
 
         self.player_hp = self.PLAYER_MAX_HP
         self.damage_cooldown_left = 0.0
@@ -717,7 +726,7 @@ class Game:
             if is_moving:
                 self.player_sprite_animator.set_animation("run", direction)
             else:
-                self.player_sprite_animator.set_animation("idle")
+                self.player_sprite_animator.set_animation("idle", direction)
 
             self.player_sprite_animator.update(dt)
         else:

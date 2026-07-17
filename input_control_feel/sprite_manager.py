@@ -131,8 +131,8 @@ class PlayerSpriteAnimator:
         self.sprites_base_path = sprites_base_path
         self.player_size = player_size
         self.death_size = int(player_size * 1.25)
-        self.weapon_size = int(player_size * 0.74)
-        self.reload_weapon_size = int(player_size * 0.90)
+        self.weapon_size = int(player_size * 0.66)
+        self.reload_weapon_size = int(player_size * 0.80)
         
         # Load all directional animators
         self.animators: dict[str, dict[str, SpriteAnimator | None]] = {
