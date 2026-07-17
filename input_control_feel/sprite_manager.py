@@ -133,13 +133,18 @@ class PlayerSpriteAnimator:
         self.death_size = int(player_size * 1.25)
         self.weapon_sizes = {
             "pistol": int(player_size * 0.66),
-            "gun": int(player_size * 0.64),
+            "assault-rifle": int(player_size * 0.64),
             "shotgun": int(player_size * 0.78),
         }
         self.reload_weapon_sizes = {
             "pistol": int(player_size * 0.80),
-            "gun": int(player_size * 0.74),
+            "assault-rifle": int(player_size * 0.74),
             "shotgun": int(player_size * 0.90),
+        }
+        self.fire_sizes = {
+            "pistol": int(player_size * 0.72),
+            "assault-rifle": int(player_size * 0.68),
+            "shotgun": int(player_size * 0.78),
         }
         self.active_weapon = "pistol"
         
@@ -213,7 +218,7 @@ class PlayerSpriteAnimator:
             },
         )
         self._load_weapon_set(
-            weapon_type="gun",
+            weapon_type="assault-rifle",
             weapon_base=os.path.join(guns_base, "Gun"),
             prefix="Gun",
             reload_candidates={
@@ -254,7 +259,7 @@ class PlayerSpriteAnimator:
             "right": "Fire_side-Sheet3.png",
         }
 
-        for weapon_type in ("pistol", "gun", "shotgun"):
+        for weapon_type in ("pistol", "assault-rifle", "shotgun"):
             self.animators["weapon_fire"][weapon_type] = {}
             for direction, filename in weapon_fire_files.items():
                 self.animators["weapon_fire"][weapon_type][direction] = self._load_animator_from_sheet_count(
@@ -612,7 +617,7 @@ class PlayerSpriteAnimator:
         if not animator:
             return None
         frame = animator.get_current_frame()
-        fire_size = int(self.player_size * 1.12)
+        fire_size = self.fire_sizes.get(self.active_weapon, self.fire_sizes["pistol"])
         if frame.get_width() != fire_size or frame.get_height() != fire_size:
             frame = pygame.transform.scale(frame, (fire_size, fire_size))
         return frame

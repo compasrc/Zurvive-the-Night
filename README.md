@@ -167,7 +167,7 @@ If your system uses py instead of python, run these instead:
 - zombie_death.mp3: https://pixabay.com/sound-effects/zombie-15965/
 - death.mp3: https://pixabay.com/sound-effects/horror-male-death-sound-128357/
 - powerup.mp3: https://pixabay.com/sound-effects/film-special-effects-video-game-power-up-sound-effect-384657/
-- gun.mp3: https://pixabay.com/sound-effects/film-special-effects-single-pistol-gunshot-42-40781/
+- assault-rifle.mp3: https://pixabay.com/sound-effects/film-special-effects-single-pistol-gunshot-42-40781/
 - hurt.mp3: https://pixabay.com/sound-effects/film-special-effects-retro-hurt-2-236675/
 
 ## Sprite Sheets and Animations

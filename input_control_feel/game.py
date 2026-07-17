@@ -70,9 +70,9 @@ class Game:
     DAMAGE_COOLDOWN = 0.5
     DEATH_ANIM_DURATION = 0.6
     PRESET_WEAPON_TYPES = {
-        "BALANCED": "pistol",
-        "RAPID-FIRE": "gun",
-        "HEAVY-CANNON": "shotgun",
+        "pistol": "pistol",
+        "assault-rifle": "assault-rifle",
+        "shotgun": "shotgun",
     }
 
     PLAYER_SIZE = 50
@@ -158,11 +158,11 @@ class Game:
         self.invincible = False   # dev toggle — press I in-game
 
         # name, accel, max_speed, friction, projectile_speed, fire_rate, ammo_max, reload_time
-        # rapid-fire trades power for volume, heavy-cannon trades speed for punch
+        # assault-rifle trades power for volume, shotgun trades speed for punch
         self.presets = [
-            FeelPreset("BALANCED",     2400.0, 440.0, 10.0, 950.0,  0.28, 10, 2.0),
-            FeelPreset("RAPID-FIRE",   3200.0, 560.0, 14.0, 800.0,  0.10, 18, 1.3),
-            FeelPreset("HEAVY-CANNON", 1500.0, 280.0, 6.0,  1300.0, 0.70, 4,  3.0),
+            FeelPreset("pistol",        2400.0, 440.0, 10.0, 950.0,  0.28, 10, 2.0),
+            FeelPreset("assault-rifle", 3200.0, 560.0, 14.0, 800.0,  0.10, 18, 1.3),
+            FeelPreset("shotgun",       1500.0, 280.0, 6.0,  1300.0, 0.70, 4,  3.0),
         ]
         self.preset_idx = 0
 
@@ -461,7 +461,7 @@ class Game:
         direction = direction.normalize()
 
         self.player_sprite_animator.trigger_shoot(self._vector_to_direction(direction))
-        self._play_sfx("gun")
+        self._play_sfx("assault-rifle")
 
         projectile = Projectile(
             position=pygame.Vector2(self.player_pos),
@@ -502,7 +502,7 @@ class Game:
         bullet_base = resolve_asset_path("input_control_feel/sprites/Player/Guns/Bullets")
         sprite_files = {
             "pistol": ("Pistol-bullet_Whole.png", 12, 1.00),
-            "gun": ("Gun-bullet_Whole.png", 14, 1.28),
+            "assault-rifle": ("Gun-bullet_Whole.png", 14, 1.38),
             "shotgun": ("Shotgun-bullet.png", 20, 1.20),
         }
 
@@ -571,7 +571,7 @@ class Game:
             return
 
         sfx_files = {
-            "gun":          resolve_asset_path("input_control_feel/sounds/gun.mp3"),
+            "assault-rifle": resolve_asset_path("input_control_feel/sounds/gun.mp3"),
             "zombie_death": resolve_asset_path("input_control_feel/sounds/zombie_death.mp3"),
             "boss_death":   resolve_asset_path("input_control_feel/sounds/boss_zombie.mp3"),
             "death":        resolve_asset_path("input_control_feel/sounds/death.mp3"),
@@ -590,8 +590,8 @@ class Game:
                 print(f"[audio] failed to load {path}: {e}")
 
         # per-sound volume tweaks — gun fires a lot so keep it quieter
-        if "gun" in self.sfx:
-            self.sfx["gun"].set_volume(0.35)
+        if "assault-rifle" in self.sfx:
+            self.sfx["assault-rifle"].set_volume(0.35)
         if "zombie_death" in self.sfx:
             self.sfx["zombie_death"].set_volume(0.6)
         if "boss_death" in self.sfx:
@@ -705,7 +705,11 @@ class Game:
                 self.player_sprite_animator.set_weapon_reloading(False)
                 self.reload_cooldown_left = 0.0
 
-        if self.ammo_current <= 0 and not self.is_reloading:
+        if (
+            self.ammo_current <= 0
+            and not self.is_reloading
+            and self.player_sprite_animator.weapon_shoot_timer <= 0
+        ):
             self._try_reload()
 
         p = self.preset
@@ -752,9 +756,9 @@ class Game:
         self.projectiles = surviving_projectiles
 
         # damage calc: weapon base × wave-5 boost × damage-boost power-up
-        if self.preset.name == "HEAVY-CANNON":
+        if self.preset.name == "shotgun":
             proj_damage = 2.0
-        elif self.preset.name == "RAPID-FIRE":
+        elif self.preset.name == "assault-rifle":
             proj_damage = 0.6
         else:
             proj_damage = 1.0
@@ -971,14 +975,14 @@ class Game:
 
         # --- equipped weapon label (below "remaining") ---
         weapon_names = {
-            "RAPID-FIRE":   "RAPID FIRE",
-            "BALANCED":     "BALANCED",
-            "HEAVY-CANNON": "HEAVY CANNON",
+            "assault-rifle": "ASSAULT RIFLE",
+            "pistol":        "PISTOL",
+            "shotgun":       "SHOTGUN",
         }
         weapon_colors = {
-            "RAPID-FIRE":   (255, 210, 80),
-            "BALANCED":     (180, 190, 170),
-            "HEAVY-CANNON": (200, 80, 60),
+            "assault-rifle": (255, 210, 80),
+            "pistol":        (180, 190, 170),
+            "shotgun":       (200, 80, 60),
         }
         weapon_text = weapon_names.get(self.preset.name, self.preset.name)
         weapon_color = weapon_colors.get(self.preset.name, (180, 180, 180))
@@ -1157,18 +1161,34 @@ class Game:
         if player_frame:
             weapon_frame, fire_frame = self.player_sprite_animator.get_weapon_frames()
             facing = self._vector_to_direction(self.last_move_dir)
+            weapon_type = self.PRESET_WEAPON_TYPES.get(self.preset.name, "pistol")
             weapon_offsets = {
                 PlayerDirection.UP: (0, -10),
                 PlayerDirection.DOWN: (0, 10),
                 PlayerDirection.LEFT: (-11, 1),
                 PlayerDirection.RIGHT: (11, 1),
             }
-            fire_offsets = {
-                PlayerDirection.UP: (0, -17),
-                PlayerDirection.DOWN: (0, 17),
-                PlayerDirection.LEFT: (-18, 1),
-                PlayerDirection.RIGHT: (18, 1),
+            fire_offsets_by_weapon = {
+                "pistol": {
+                    PlayerDirection.UP: (0, -22),
+                    PlayerDirection.DOWN: (0, 22),
+                    PlayerDirection.LEFT: (-23, 1),
+                    PlayerDirection.RIGHT: (23, 1),
+                },
+                "assault-rifle": {
+                    PlayerDirection.UP: (0, -25),
+                    PlayerDirection.DOWN: (0, 25),
+                    PlayerDirection.LEFT: (-26, 1),
+                    PlayerDirection.RIGHT: (26, 1),
+                },
+                "shotgun": {
+                    PlayerDirection.UP: (0, -24),
+                    PlayerDirection.DOWN: (0, 24),
+                    PlayerDirection.LEFT: (-25, 1),
+                    PlayerDirection.RIGHT: (25, 1),
+                },
             }
+            fire_offsets = fire_offsets_by_weapon.get(weapon_type, fire_offsets_by_weapon["pistol"])
 
             # facing up: draw weapon under the player body so it doesn't cover the head
             if weapon_frame and facing == PlayerDirection.UP:
