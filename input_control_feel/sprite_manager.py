@@ -131,11 +131,20 @@ class PlayerSpriteAnimator:
         self.sprites_base_path = sprites_base_path
         self.player_size = player_size
         self.death_size = int(player_size * 1.25)
-        self.weapon_size = int(player_size * 0.66)
-        self.reload_weapon_size = int(player_size * 0.80)
+        self.weapon_sizes = {
+            "pistol": int(player_size * 0.66),
+            "gun": int(player_size * 0.64),
+            "shotgun": int(player_size * 0.78),
+        }
+        self.reload_weapon_sizes = {
+            "pistol": int(player_size * 0.80),
+            "gun": int(player_size * 0.74),
+            "shotgun": int(player_size * 0.90),
+        }
+        self.active_weapon = "pistol"
         
         # Load all directional animators
-        self.animators: dict[str, dict[str, SpriteAnimator | None]] = {
+        self.animators: dict[str, dict] = {
             "idle": {},
             "run": {},
             "death": {},
@@ -190,25 +199,54 @@ class PlayerSpriteAnimator:
                 default_frame_count=6,
             )
 
-        weapon_base = os.path.join(self.sprites_base_path, "Weapon")
-        weapon_idle_files = {
-            "down": "Pistol_down_idle-and-run-Sheet6.png",
-            "up": "Pistol_up_idle-and-run-Sheet6.png",
-            "left": "Pistol_side-left_idle-and-run-Sheet6.png",
-            "right": "Pistol_side_idle-and-run-Sheet6.png",
-        }
-        weapon_shoot_files = {
-            "down": "Pistol_down_shoot-Sheet3.png",
-            "up": "Pistol_up_shoot-Sheet3.png",
-            "left": "Pistol_side-left_shoot-Sheet3.png",
-            "right": "Pistol_side_shoot-Sheet3.png",
-        }
-        weapon_reload_files = {
-            "down": "Pistol_down_Reload-Sheet11.png",
-            "up": "Pistol_up_Reload-Sheet11.png",
-            "left": "Pistol_side-left_Reload-Sheet11.png",
-            "right": "Pistol_side_Reload-Sheet11.png",
-        }
+        guns_base = os.path.join(self.sprites_base_path, "Guns")
+
+        self._load_weapon_set(
+            weapon_type="pistol",
+            weapon_base=os.path.join(guns_base, "Pistol"),
+            prefix="Pistol",
+            reload_candidates={
+                "down": ["Pistol_down_Reload-Sheet11.png"],
+                "up": ["Pistol_up_Reload-Sheet11.png"],
+                "left": ["Pistol_side-left_Reload-Sheet11.png"],
+                "right": ["Pistol_side_Reload-Sheet11.png"],
+            },
+        )
+        self._load_weapon_set(
+            weapon_type="gun",
+            weapon_base=os.path.join(guns_base, "Gun"),
+            prefix="Gun",
+            reload_candidates={
+                "down": ["Gun_down_reload-Sheet8.png", "Gun_down_Reload-Sheet8.png"],
+                "up": ["Gun_up_reload-Sheet8.png", "Gun_up_Reload-Sheet8.png"],
+                "left": ["Gun_side-left_Reload-Sheet8.png", "Gun_side-left_reload-Sheet8.png"],
+                "right": ["Gun_side_reload-Sheet8.png", "Gun_side_Reload-Sheet8.png"],
+            },
+        )
+        self._load_weapon_set(
+            weapon_type="shotgun",
+            weapon_base=os.path.join(guns_base, "Shotgun"),
+            prefix="Shotgun",
+            reload_candidates={
+                "down": [
+                    "Shotgun_down_1reload-Sheet9.png",
+                    "Shotgun_down_reload_first-part-Sheet4.png",
+                ],
+                "up": [
+                    "Shotgun_up_1reload-Sheet9.png",
+                    "Shotgun_up_reload_first-part-Sheet4.png",
+                ],
+                "left": [
+                    "Shotgun_side-left_1reload-Sheet9.png",
+                    "Shotgun_side-left_reload_first-part-Sheet4.png",
+                ],
+                "right": [
+                    "Shotgun_side_1reload-Sheet9.png",
+                    "Shotgun_side_reload_first-part-Sheet4.png",
+                ],
+            },
+        )
+
         weapon_fire_files = {
             "down": "Fire_Down-Sheet3.png",
             "up": "Fire_Up-Sheet3.png",
@@ -216,30 +254,107 @@ class PlayerSpriteAnimator:
             "right": "Fire_side-Sheet3.png",
         }
 
-        for direction, filename in weapon_idle_files.items():
-            self.animators["weapon_idle"][direction] = self._load_animator_from_sheet_count(
-                os.path.join(weapon_base, filename),
+        for weapon_type in ("pistol", "gun", "shotgun"):
+            self.animators["weapon_fire"][weapon_type] = {}
+            for direction, filename in weapon_fire_files.items():
+                self.animators["weapon_fire"][weapon_type][direction] = self._load_animator_from_sheet_count(
+                    os.path.join(guns_base, "Fire", filename),
+                    frame_count=3,
+                    anim_key="fire",
+                )
+
+    def _load_weapon_set(
+        self,
+        weapon_type: str,
+        weapon_base: str,
+        prefix: str,
+        reload_candidates: dict[str, list[str]],
+    ) -> None:
+        self.animators["weapon_idle"][weapon_type] = {}
+        self.animators["weapon_shoot"][weapon_type] = {}
+        self.animators["weapon_reload"][weapon_type] = {}
+
+        idle_files = {
+            "down": [f"{prefix}_down_idle-and-run-Sheet6.png"],
+            "up": [f"{prefix}_up_idle-and-run-Sheet6.png"],
+            "left": [f"{prefix}_side-left_idle-and-run-Sheet6.png"],
+            "right": [f"{prefix}_side_idle-and-run-Sheet6.png"],
+        }
+        shoot_files = {
+            "down": [f"{prefix}_down_shoot-Sheet3.png"],
+            "up": [f"{prefix}_up_shoot-Sheet3.png"],
+            "left": [f"{prefix}_side-left_shoot-Sheet3.png"],
+            "right": [f"{prefix}_side_shoot-Sheet3.png"],
+        }
+
+        for direction, filenames in idle_files.items():
+            self.animators["weapon_idle"][weapon_type][direction] = self._load_animator_from_candidates(
+                weapon_base,
+                filenames,
                 frame_count=6,
                 anim_key="idle",
             )
-        for direction, filename in weapon_shoot_files.items():
-            self.animators["weapon_shoot"][direction] = self._load_animator_from_sheet_count(
-                os.path.join(weapon_base, filename),
+
+        for direction, filenames in shoot_files.items():
+            self.animators["weapon_shoot"][weapon_type][direction] = self._load_animator_from_candidates(
+                weapon_base,
+                filenames,
                 frame_count=3,
                 anim_key="shoot",
             )
-        for direction, filename in weapon_reload_files.items():
-            self.animators["weapon_reload"][direction] = self._load_animator_from_sheet_count(
-                os.path.join(weapon_base, filename),
-                frame_count=11,
+
+        for direction, filenames in reload_candidates.items():
+            frame_count = self._infer_frame_count_from_candidates(filenames, 6)
+            self.animators["weapon_reload"][weapon_type][direction] = self._load_animator_from_candidates(
+                weapon_base,
+                filenames,
+                frame_count=frame_count,
                 anim_key="reload",
             )
-        for direction, filename in weapon_fire_files.items():
-            self.animators["weapon_fire"][direction] = self._load_animator_from_sheet_count(
-                os.path.join(weapon_base, filename),
-                frame_count=3,
-                anim_key="fire",
-            )
+
+    def _load_animator_from_candidates(
+        self,
+        base_path: str,
+        filenames: list[str],
+        frame_count: int,
+        anim_key: str,
+    ) -> SpriteAnimator | None:
+        paths = [os.path.join(base_path, filename) for filename in filenames]
+        for path in paths:
+            if os.path.exists(path):
+                inferred = self._infer_sheet_frame_count(path, frame_count)
+                return self._load_animator_from_sheet_count(path, inferred or frame_count, anim_key)
+
+        if paths:
+            print(f"[PlayerSpriteAnimator] Warning: Sprite not found: {paths[0]}")
+        return None
+
+    def _active_weapon_animator(self, category: str, direction_key: str) -> SpriteAnimator | None:
+        weapon_sets = self.animators.get(category, {})
+        current_set = weapon_sets.get(self.active_weapon, {})
+        animator = current_set.get(direction_key)
+        if animator:
+            return animator
+
+        pistol_set = weapon_sets.get("pistol", {})
+        return pistol_set.get(direction_key)
+
+    @staticmethod
+    def _infer_frame_count_from_candidates(filenames: list[str], fallback: int) -> int:
+        for filename in filenames:
+            match = re.search(r"[Ss]heet(\d+)", filename)
+            if match:
+                return int(match.group(1))
+        return fallback
+
+    def set_weapon_type(self, weapon_type: str) -> None:
+        normalized = weapon_type.strip().lower()
+        if normalized not in self.animators["weapon_idle"]:
+            print(f"[PlayerSpriteAnimator] Warning: Unknown weapon type '{weapon_type}', using pistol")
+            normalized = "pistol"
+        self.active_weapon = normalized
+        self.weapon_reloading = False
+        self.weapon_shoot_timer = 0.0
     
     def _load_animator_safe(self, path: str, frame_width: int, frame_height: int,
                            frames_per_row: int, animations: dict) -> SpriteAnimator | None:
@@ -423,7 +538,7 @@ class PlayerSpriteAnimator:
 
         if is_reloading and not self.weapon_reloading:
             direction_key = self.current_direction.value
-            animator = self.animators["weapon_reload"].get(direction_key)
+            animator = self._active_weapon_animator("weapon_reload", direction_key)
             if animator:
                 animator.set_animation("reload")
 
@@ -433,35 +548,35 @@ class PlayerSpriteAnimator:
         direction_key = self.current_direction.value
 
         if self.weapon_reloading:
-            reload_anim = self.animators["weapon_reload"].get(direction_key)
+            reload_anim = self._active_weapon_animator("weapon_reload", direction_key)
             return self._scaled_weapon_frame(reload_anim, use_reload_size=True), None
 
         if self.weapon_shoot_timer > 0:
-            weapon_anim = self.animators["weapon_shoot"].get(direction_key)
-            fire_anim = self.animators["weapon_fire"].get(direction_key)
+            weapon_anim = self._active_weapon_animator("weapon_shoot", direction_key)
+            fire_anim = self._active_weapon_animator("weapon_fire", direction_key)
             return self._scaled_weapon_frame(weapon_anim), self._scaled_fire_frame(fire_anim)
 
-        idle_anim = self.animators["weapon_idle"].get(direction_key)
+        idle_anim = self._active_weapon_animator("weapon_idle", direction_key)
         return self._scaled_weapon_frame(idle_anim), None
 
     def _update_weapon(self, dt: float) -> None:
         direction_key = self.current_direction.value
 
         if self.weapon_reloading:
-            reload_anim = self.animators["weapon_reload"].get(direction_key)
+            reload_anim = self._active_weapon_animator("weapon_reload", direction_key)
             if reload_anim:
                 reload_anim.set_animation("reload")
                 reload_anim.update(dt)
             return
 
-        idle_anim = self.animators["weapon_idle"].get(direction_key)
+        idle_anim = self._active_weapon_animator("weapon_idle", direction_key)
         if idle_anim:
             idle_anim.set_animation("idle")
             idle_anim.update(dt)
 
         if self.weapon_shoot_timer > 0:
-            shoot_anim = self.animators["weapon_shoot"].get(direction_key)
-            fire_anim = self.animators["weapon_fire"].get(direction_key)
+            shoot_anim = self._active_weapon_animator("weapon_shoot", direction_key)
+            fire_anim = self._active_weapon_animator("weapon_fire", direction_key)
             if shoot_anim:
                 shoot_anim.set_animation("shoot")
                 shoot_anim.update(dt)
@@ -472,7 +587,7 @@ class PlayerSpriteAnimator:
     def _reset_weapon_burst_frames(self) -> None:
         direction_key = self.current_direction.value
         for key, anim_name in (("weapon_shoot", "shoot"), ("weapon_fire", "fire")):
-            animator = self.animators[key].get(direction_key)
+            animator = self._active_weapon_animator(key, direction_key)
             if animator:
                 animator.set_animation(anim_name)
 
@@ -484,7 +599,11 @@ class PlayerSpriteAnimator:
         if not animator:
             return None
         frame = animator.get_current_frame()
-        target_size = self.reload_weapon_size if use_reload_size else self.weapon_size
+        target_size = (
+            self.reload_weapon_sizes.get(self.active_weapon, self.reload_weapon_sizes["pistol"])
+            if use_reload_size
+            else self.weapon_sizes.get(self.active_weapon, self.weapon_sizes["pistol"])
+        )
         if frame.get_width() != target_size or frame.get_height() != target_size:
             frame = pygame.transform.scale(frame, (target_size, target_size))
         return frame

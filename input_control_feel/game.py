@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
+import os
 import random
 
 from input_control_feel.wave_manager import WaveManager
@@ -28,11 +29,16 @@ class Projectile:
     velocity: pygame.Vector2
     radius: float = 4
     color: tuple = (255, 255, 255)
+    sprite: pygame.Surface | None = None
 
     def update(self, dt: float) -> None:
         self.position += self.velocity * dt
 
     def draw(self, screen: pygame.Surface) -> None:
+        if self.sprite is not None:
+            dest = self.sprite.get_rect(center=(int(self.position.x), int(self.position.y)))
+            screen.blit(self.sprite, dest.topleft)
+            return
         pygame.draw.circle(screen, self.color, (int(self.position.x), int(self.position.y)), self.radius)
 
 
@@ -63,6 +69,11 @@ class Game:
     PLAYER_MAX_HP = 100
     DAMAGE_COOLDOWN = 0.5
     DEATH_ANIM_DURATION = 0.6
+    PRESET_WEAPON_TYPES = {
+        "BALANCED": "pistol",
+        "RAPID-FIRE": "gun",
+        "HEAVY-CANNON": "shotgun",
+    }
 
     PLAYER_SIZE = 50
 
@@ -122,6 +133,7 @@ class Game:
         # sound effects + music — missing files are skipped silently
         self._init_audio()
         self._play_music("menu")
+        self.bullet_sprite_templates = self._load_bullet_sprites()
 
         # states: "title", "play", "dying", "paused", "game_over", "victory"
         self.state = "title"
@@ -165,6 +177,7 @@ class Game:
             "idle",
             self._vector_to_direction(self.last_move_dir),
         )
+        self._sync_weapon_type_with_preset()
 
         self.projectiles: list[Projectile] = []
         self.ammo_current = self.preset.ammo_max
@@ -244,6 +257,7 @@ class Game:
             self._vector_to_direction(self.last_move_dir),
         )
         self.player_sprite_animator.set_weapon_reloading(False, self._vector_to_direction(self.last_move_dir))
+        self._sync_weapon_type_with_preset()
 
         self.player_hp = self.PLAYER_MAX_HP
         self.damage_cooldown_left = 0.0
@@ -452,6 +466,7 @@ class Game:
         projectile = Projectile(
             position=pygame.Vector2(self.player_pos),
             velocity=direction * self.preset.projectile_speed,
+            sprite=self._build_projectile_sprite(direction),
         )
         self.projectiles.append(projectile)
 
@@ -473,10 +488,75 @@ class Game:
         )
 
     def _update_ammo_for_preset(self) -> None:
+        self._sync_weapon_type_with_preset()
         self.ammo_current = self.preset.ammo_max
         self.is_reloading = False
         self.player_sprite_animator.set_weapon_reloading(False)
         self.reload_cooldown_left = 0.0
+
+    def _sync_weapon_type_with_preset(self) -> None:
+        weapon_type = self.PRESET_WEAPON_TYPES.get(self.preset.name, "pistol")
+        self.player_sprite_animator.set_weapon_type(weapon_type)
+
+    def _load_bullet_sprites(self) -> dict[str, pygame.Surface]:
+        bullet_base = resolve_asset_path("input_control_feel/sprites/Player/Guns/Bullets")
+        sprite_files = {
+            "pistol": ("Pistol-bullet_Whole.png", 12, 1.00),
+            "gun": ("Gun-bullet_Whole.png", 14, 1.28),
+            "shotgun": ("Shotgun-bullet.png", 20, 1.20),
+        }
+
+        loaded: dict[str, pygame.Surface] = {}
+        for weapon_type, (filename, max_dim, stretch_x) in sprite_files.items():
+            path = os.path.join(bullet_base, filename)
+            if not os.path.exists(path):
+                print(f"[bullet] missing: {path}")
+                continue
+            try:
+                sprite = pygame.image.load(path).convert_alpha()
+                scaled = self._scale_surface_max_dim(sprite, max_dim)
+                loaded[weapon_type] = self._scale_surface_x(scaled, stretch_x)
+            except pygame.error as e:
+                print(f"[bullet] failed to load {path}: {e}")
+
+        return loaded
+
+    @staticmethod
+    def _scale_surface_max_dim(surface: pygame.Surface, max_dim: int) -> pygame.Surface:
+        width, height = surface.get_size()
+        if width <= 0 or height <= 0:
+            return surface
+
+        longest = max(width, height)
+        if longest == max_dim:
+            return surface
+
+        scale = max_dim / float(longest)
+        new_size = (max(1, int(width * scale)), max(1, int(height * scale)))
+        return pygame.transform.smoothscale(surface, new_size)
+
+    @staticmethod
+    def _scale_surface_x(surface: pygame.Surface, factor: float) -> pygame.Surface:
+        if factor == 1.0:
+            return surface
+
+        width, height = surface.get_size()
+        new_width = max(1, int(width * factor))
+        return pygame.transform.smoothscale(surface, (new_width, height))
+
+    def _build_projectile_sprite(self, direction: pygame.Vector2) -> pygame.Surface | None:
+        weapon_type = self.PRESET_WEAPON_TYPES.get(self.preset.name, "pistol")
+        base_sprite = self.bullet_sprite_templates.get(weapon_type)
+        if base_sprite is None:
+            return None
+
+        if direction.length_squared() == 0:
+            return base_sprite
+
+        facing = direction.normalize()
+        # Base bullet sprites are authored pointing to the right.
+        angle = facing.angle_to(pygame.Vector2(1, 0))
+        return pygame.transform.rotate(base_sprite, angle)
 
     # audio — loaded once, missing files are skipped
     def _init_audio(self) -> None:
