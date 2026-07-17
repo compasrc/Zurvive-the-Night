@@ -1,6 +1,7 @@
 import pygame
 from enum import Enum
 import os
+import re
 
 
 class AnimationState(str, Enum):
@@ -159,40 +160,34 @@ class PlayerSpriteAnimator:
         """Load all sprite sheets for player animations."""
         # Idle - single sheet
         idle_path = os.path.join(self.sprites_base_path, "Idle", "Character_down_idle_no-hands-Sheet6.png")
-        self.animators["idle"]["all"] = self._load_animator_safe(
+        self.animators["idle"]["all"] = self._load_animator_auto(
             idle_path,
-            frame_width=11,  # 66 / 6
-            frame_height=16,
-            frames_per_row=6,
-            animations={"idle": (0, 6)}  # All 6 frames for idle loop
+            anim_key="idle",
+            default_frame_count=6,
         )
         
         # Death - single sheet
         death_path = os.path.join(self.sprites_base_path, "Death", "Character_side_death1_NoHands-Sheet6.png")
-        self.animators["death"]["all"] = self._load_animator_safe(
+        self.animators["death"]["all"] = self._load_animator_auto(
             death_path,
-            frame_width=21,  # 126 / 6
-            frame_height=16,
-            frames_per_row=6,
-            animations={"death": (0, 6)}
+            anim_key="death",
+            default_frame_count=6,
         )
         
         # Run - directional sheets
         run_configs = {
-            "down": ("Character_down_run_handless.png", 13, 17),    # 78 / 6
-            "up": ("Character_up_run_handless.png", 13, 17),
-            "left": ("Character_side-left_run_handless.png", 14, 17), # 84 / 6
-            "right": ("Character_side-right_run_handless.png", 14, 17),
+            "down": ["Character_down_run_no-hands.png"],
+            "up": ["Character_up_run_no-hands.png"],
+            "left": ["Character_side-left_run_no-hands.png"],
+            "right": ["Character_side-right_run_no-hands.png", "Character_side_run_no-hands.png"],
         }
         
-        for direction, (filename, frame_w, frame_h) in run_configs.items():
-            run_path = os.path.join(self.sprites_base_path, "Run", filename)
-            self.animators["run"][direction] = self._load_animator_safe(
-                run_path,
-                frame_width=frame_w,
-                frame_height=frame_h,
-                frames_per_row=6,
-                animations={"run": (0, 6)}
+        for direction, filenames in run_configs.items():
+            run_paths = [os.path.join(self.sprites_base_path, "Run", filename) for filename in filenames]
+            self.animators["run"][direction] = self._load_animator_any(
+                run_paths,
+                anim_key="run",
+                default_frame_count=6,
             )
 
         weapon_base = os.path.join(self.sprites_base_path, "Weapon")
@@ -279,6 +274,85 @@ class PlayerSpriteAnimator:
         except Exception as e:
             print(f"[PlayerSpriteAnimator] Failed to load {path}: {e}")
             return None
+
+    def _load_animator_auto(
+        self,
+        path: str,
+        anim_key: str,
+        default_frame_count: int | None = None,
+    ) -> SpriteAnimator | None:
+        """Load an animator by deriving frame width from the sheet dimensions."""
+        if not os.path.exists(path):
+            print(f"[PlayerSpriteAnimator] Warning: Sprite not found: {path}")
+            return None
+        try:
+            sheet = pygame.image.load(path).convert_alpha()
+            sheet_w, sheet_h = sheet.get_size()
+
+            frame_count = self._infer_sheet_frame_count(path, default_frame_count)
+            if frame_count <= 0:
+                frame_count = self._estimate_frame_count(sheet_w, sheet_h)
+
+            if frame_count <= 0:
+                print(f"[PlayerSpriteAnimator] Warning: Invalid frame count for {path}")
+                return None
+
+            frame_w = max(1, sheet_w // frame_count)
+            return SpriteAnimator(
+                path,
+                frame_width=frame_w,
+                frame_height=sheet_h,
+                frames_per_row=frame_count,
+                animations={anim_key: (0, frame_count)},
+            )
+        except Exception as e:
+            print(f"[PlayerSpriteAnimator] Failed to load {path}: {e}")
+            return None
+
+    def _load_animator_any(
+        self,
+        paths: list[str],
+        anim_key: str,
+        default_frame_count: int | None = None,
+    ) -> SpriteAnimator | None:
+        """Load the first available animator from a list of candidate paths."""
+        for path in paths:
+            if os.path.exists(path):
+                return self._load_animator_auto(path, anim_key, default_frame_count)
+
+        if paths:
+            print(f"[PlayerSpriteAnimator] Warning: Sprite not found: {paths[0]}")
+        return None
+
+    @staticmethod
+    def _infer_sheet_frame_count(path: str, default_frame_count: int | None = None) -> int:
+        """Infer frame count from filenames like "Sheet6", with default fallback."""
+        filename = os.path.basename(path)
+        match = re.search(r"[Ss]heet(\d+)", filename)
+        if match:
+            return int(match.group(1))
+        return default_frame_count or 0
+
+    @staticmethod
+    def _estimate_frame_count(sheet_width: int, sheet_height: int) -> int:
+        """Estimate frame count by selecting a width that best matches frame height."""
+        if sheet_width <= 0 or sheet_height <= 0:
+            return 1
+
+        candidates: list[tuple[float, int]] = []
+        for count in range(1, min(32, sheet_width) + 1):
+            if sheet_width % count != 0:
+                continue
+            frame_width = sheet_width // count
+            ratio = frame_width / sheet_height
+            if 0.45 <= ratio <= 2.2:
+                candidates.append((abs(1.0 - ratio), count))
+
+        if not candidates:
+            return 1
+
+        candidates.sort(key=lambda item: item[0])
+        return candidates[0][1]
     
     def set_animation(self, animation_state: str, direction: PlayerDirection | None = None) -> None:
         """Switch animation state. Direction is ignored for idle/death."""
